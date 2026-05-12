@@ -5,5 +5,6 @@ const customerController = require("../controllers/customerController")
 
 router.get("/", authMiddleware, cutomerController.getAllKatalogCustomer);
 router.get("/search", authMiddleware, cutomerController.searchKatalogCustomer);
+router.get("/:id", authMiddleware, cutomerController.searchKatalogCustomerById);
 
 module.exports = router;
