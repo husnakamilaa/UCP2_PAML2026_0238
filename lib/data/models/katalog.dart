@@ -1,6 +1,6 @@
 class KatalogModel {
   final int id;
-  final int id_kategori;
+  final int? id_kategori;
   final String nama; 
   final int harga;
   final String tahun_produksi;
