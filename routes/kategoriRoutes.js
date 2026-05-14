@@ -3,8 +3,8 @@ const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware")
 const kategoriController = require("../controllers/kategoriController")
 
-router.post("/", authMiddleware, kategoriController.createKatalog);
-router.get("/", authMiddleware, kategoriController.getAllKatalog);
-router.delete("/:id", authMiddleware, kategoriController.deleteKatalog);
+router.post("/", authMiddleware, kategoriController.createKategori);
+router.get("/", authMiddleware, kategoriController.getAllKategori);
+router.delete("/:id", authMiddleware, kategoriController.deleteKategori);
 
 module.exports = router;
