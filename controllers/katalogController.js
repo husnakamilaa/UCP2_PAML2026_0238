@@ -30,7 +30,7 @@ exports.getAllKatalog = (req, res) => {
   katalog.*,
   kategori.merk
   FROM katalog
-  JOIN kategori
+  LEFT JOIN kategori
   ON katalog.id_kategori = kategori.id
   `;
 
@@ -54,7 +54,7 @@ exports.searchKatalog = (req, res) => {
   katalog.*,
   kategori.merk
   FROM katalog
-  JOIN kategori
+  LEFT JOIN kategori
   ON katalog.id_kategori = kategori.id
   WHERE nama LIKE ?
   `;
@@ -78,7 +78,7 @@ exports.getKatalogById = (req, res) => {
   katalog.*,
   kategori.merk
   FROM katalog
-  JOIN kategori
+  LEFT JOIN kategori
   ON katalog.id_kategori = kategori.id
   WHERE id = ?`;
   db.query(sql, [id], (err, results) => {
