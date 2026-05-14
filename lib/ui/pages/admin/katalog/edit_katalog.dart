@@ -7,8 +7,10 @@ import 'package:driveease/logic/bloc/admin/katalog/katalog_state.dart';
 import 'package:driveease/logic/bloc/admin/kategori/kategori_bloc.dart';
 import 'package:driveease/logic/bloc/admin/kategori/kategori_state.dart';
 import 'package:driveease/ui/components/colours.dart';
+import 'package:driveease/ui/components/rupiah_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
@@ -31,15 +33,16 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
   final _maxspeedController = TextEditingController();
   final _capacityController = TextEditingController();
 
-  final _rupiahFormatter = CurrencyTextInputFormatter.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
+  // final _rupiahFormatter = CurrencyTextInputFormatter.currency(
+  //   locale: 'id',
+  //   symbol: 'Rp ',
+  //   decimalDigits: 0,
+  // );
 
   int? _selectedKategoriId;
   String? _selectedTahun;
   String? _selectedTransmisi;
+  bool _isUploadingImage = false;
 
   final List<String> _listTahun = [
     '2021',
@@ -60,12 +63,19 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
     super.initState();
     _namaController.text = widget.katalog.nama;
 
-    _hargaController.text = widget.katalog.harga.toString();
-    // _hargaController.text = _rupiahFormatter.formatString(
-    //   widget.katalog.harga.toString(),
-    // );
+    // _hargaController.text = widget.katalog.harga.toString();
+     _hargaController.text = toCurrencyString(
+    widget.katalog.harga.toString(),
+    leadingSymbol: 'Rp ',
+    thousandSeparator: ThousandSeparator.Period,
+    mantissaLength: 0,
+  );
 
-    _maxspeedController.text = widget.katalog.maxspeed.replaceAll(' km/jam', '');
+
+    _maxspeedController.text = widget.katalog.maxspeed.replaceAll(
+      ' km/jam',
+      '',
+    );
 
     _capacityController.text = widget.katalog.capacity.replaceAll(' seats', '');
 
@@ -89,38 +99,48 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
   }
 
   Future<void> _pickImage() async {
-  try {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-      maxWidth: 1920,
-    );
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 1920,
+      );
 
-    if (pickedFile != null) {
+      if (pickedFile == null) return;
+
       setState(() {
+        _isUploadingImage = true;
         _imageFile = File(pickedFile.path);
       });
 
-      final imageUrl = await uploadImageToCloudinary(
-        pickedFile.path,
-      );
+      final imageFile = File(pickedFile.path);
+
+      setState(() {
+        _imageFile = imageFile;
+      });
+
+      final uploadedUrl = await uploadImageToCloudinary(pickedFile.path);
 
       if (!mounted) return;
 
       setState(() {
-        _imageUrl = imageUrl;
+        _imageUrl = uploadedUrl;
+        _isUploadingImage = false;
       });
 
-      print("URL IMAGE: $imageUrl");
-    }
-  } catch (e) {
-    print("Error mengambil gambar: $e");
+      print("IMAGE BARU: $_imageUrl");
+    } catch (e) {
+      setState(() {
+        _isUploadingImage = false;
+      });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Gagal mengambil gambar: $e")),
-    );
+      print("Error mengambil gambar: $e");
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal mengambil gambar: $e")));
+    }
   }
-}
 
   Future<String> uploadImageToCloudinary(String imagePath) async {
     final uri = Uri.parse(
@@ -146,6 +166,12 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
   }
 
   Future<void> _submitForm() async {
+    if (_isUploadingImage) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Tunggu upload gambar selesai")),
+      );
+      return;
+    }
     if (_formKey.currentState!.validate()) {
       if (_imageFile == null && _imageUrl == null) {
         ScaffoldMessenger.of(
@@ -154,12 +180,11 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
         return;
       }
 
-    //   String imageUrl = _imageUrl ?? '';
+      //   String imageUrl = _imageUrl ?? '';
 
-    // if (_imageFile != null) {
-    //   imageUrl = await uploadImageToCloudinary(_imageFile!.path);
-    // }
-
+      // if (_imageFile != null) {
+      //   imageUrl = await uploadImageToCloudinary(_imageFile!.path);
+      // }
 
       if (_selectedKategoriId == null ||
           _selectedTahun == null ||
@@ -169,10 +194,9 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
         );
         return;
       }
-      String hargaBersih = _hargaController.text.replaceAll(
-        RegExp(r'[^0-9]'),
-        '',
-      );
+      // String hargaBersih = toNumericString(_hargaController.text);
+      String hargaBersih = toNumericString(_hargaController.text);
+
       final data = {
         'id_kategori': _selectedKategoriId,
         'nama': _namaController.text,
@@ -183,6 +207,7 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
         'capacity': "${_capacityController.text} seats",
         'image': _imageUrl,
       };
+      print(data);
 
       context.read<KatalogBloc>().add(UpdateKatalog(widget.katalog.id, data));
     }
@@ -247,7 +272,19 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
                             },
                           ),
                           const SizedBox(height: 16),
-                          // harga
+
+                          if (_selectedKategoriId == null)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                "Kategori lama sudah dihapus. Silakan pilih merk baru.",
+                              ),
+                            ),
                           BlocBuilder<KategoriBloc, KategoriState>(
                             builder: (context, state) {
                               List<DropdownMenuItem<int>> menuItems = [];
@@ -257,7 +294,14 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
                               if (state is KategoriLoaded) {
                                 isLoading = false;
                                 hintText = "Pilih Merk Mobil";
-                                // Mapping data dari backend
+                                final kategoriList = state.kategoriList;
+                                final kategoriMasihAda = kategoriList.any(
+                                  (kat) => kat.id == _selectedKategoriId,
+                                );
+                                if (!kategoriMasihAda) {
+                                  _selectedKategoriId = null;
+                                }
+
                                 menuItems = state.kategoriList.map((kat) {
                                   return DropdownMenuItem<int>(
                                     value: kat.id,
@@ -292,17 +336,33 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
                           TextFormField(
                             controller: _hargaController,
                             keyboardType: TextInputType.number,
-                            inputFormatters: [_rupiahFormatter],
+                            inputFormatters: [RupiahInputFormatter()],
                             decoration: InputDecoration(
-                              labelText: "Harga Sewa",
+                              labelText: "Harga",
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            validator: (value) =>
-                                value!.isEmpty ? 'Harga harus diisi' : null,
+                             validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Harga harus diisi';
+                              }
+                              String hargaBersih = value.replaceAll(
+                                RegExp(r'[^0-9]'),
+                                '',
+                              );
+                              if (hargaBersih.length > 15) {
+                                return 'Harga maksimal 15 digit';
+                              }
+
+                              if (int.tryParse(hargaBersih) == null) {
+                                return 'Harga tidak valid';
+                              }
+
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
                           Row(
@@ -420,48 +480,52 @@ class _EditKatalogPageState extends State<EditKatalogPage> {
                                   style: BorderStyle.solid,
                                 ),
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: _imageFile != null
-                                    ? Image.file(
-                                        _imageFile!,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                      )
-                                    : _imageUrl != null
-                                    ? Image.network(
-                                        _imageUrl!,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                        //PAKE KLO ERROR AJA IMAHGENYAA!!!!
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                              return const Icon(
-                                                Icons.broken_image,
-                                              );
-                                            },
-                                      )
-                                    : Container(
-                                        color: AppColors.white,
-                                        child: const Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.add_a_photo,
-                                              size: 40,
-                                              color: AppColors.grey,
+                              child: _isUploadingImage
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: _imageFile != null
+                                          ? Image.file(
+                                              _imageFile!,
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                            )
+                                          : _imageUrl != null
+                                          ? Image.network(
+                                              _imageUrl!,
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              //PAKE KLO ERROR AJA IMAHGENYAA!!!!
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    return const Icon(
+                                                      Icons.broken_image,
+                                                    );
+                                                  },
+                                            )
+                                          : Container(
+                                              color: AppColors.white,
+                                              child: const Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.add_a_photo,
+                                                    size: 40,
+                                                    color: AppColors.grey,
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    "Tap untuk pilih dari galerimuuu",
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                            SizedBox(height: 8),
-                                            Text(
-                                              "Tap untuk pilih dari galerimuuu",
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                              ),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 32),

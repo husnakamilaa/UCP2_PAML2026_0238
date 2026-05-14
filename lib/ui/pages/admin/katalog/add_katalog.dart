@@ -7,8 +7,10 @@ import 'package:driveease/logic/bloc/admin/katalog/katalog_state.dart';
 import 'package:driveease/logic/bloc/admin/kategori/kategori_bloc.dart';
 import 'package:driveease/logic/bloc/admin/kategori/kategori_state.dart';
 import 'package:driveease/ui/components/colours.dart';
+import 'package:driveease/ui/components/rupiah_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
@@ -28,11 +30,12 @@ class _AddKatalogPageState extends State<AddKatalogPage> {
   final _maxspeedController = TextEditingController();
   final _capacityController = TextEditingController();
 
-  final _rupiahFormatter = CurrencyTextInputFormatter.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
+  // final _rupiahFormatter = CurrencyTextInputFormatter.currency(
+  //   locale: 'id',
+  //   symbol: 'Rp ',
+  //   decimalDigits: 0,
+  // );
+  
 
   int? _selectedKategoriId;
   String? _selectedTahun;
@@ -65,6 +68,7 @@ class _AddKatalogPageState extends State<AddKatalogPage> {
     _capacityController.dispose();
     super.dispose();
   }
+
 
   Future<String> uploadImageToCloudinary(String imagePath) async {
     try {
@@ -121,7 +125,6 @@ class _AddKatalogPageState extends State<AddKatalogPage> {
         _imageUrl = imageUrl;
       });
     } catch (e) {
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -145,10 +148,11 @@ class _AddKatalogPageState extends State<AddKatalogPage> {
         );
         return;
       }
-      String hargaBersih = _hargaController.text.replaceAll(
-        RegExp(r'[^0-9]'),
-        '',
-      );
+      String hargaBersih = toNumericString(_hargaController.text);
+      // String hargaBersih = _hargaController.text.replaceAll(
+      //   RegExp(r'[^0-9]'),
+      //   '',
+      // );
       final data = {
         'id_kategori': _selectedKategoriId,
         'nama': _namaController.text,
@@ -268,17 +272,33 @@ class _AddKatalogPageState extends State<AddKatalogPage> {
                           TextFormField(
                             controller: _hargaController,
                             keyboardType: TextInputType.number,
-                            inputFormatters: [],
+                            inputFormatters: [RupiahInputFormatter()],
                             decoration: InputDecoration(
-                              labelText: "Harga Sewa",
+                              labelText: "Harga",
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            validator: (value) =>
-                                value!.isEmpty ? 'Harga harus diisi' : null,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Harga harus diisi';
+                              }
+                              String hargaBersih = value.replaceAll(
+                                RegExp(r'[^0-9]'),
+                                '',
+                              );
+                              if (hargaBersih.length > 15) {
+                                return 'Harga maksimal 15 digit';
+                              }
+
+                              if (int.tryParse(hargaBersih) == null) {
+                                return 'Harga tidak valid';
+                              }
+
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
                           Row(
