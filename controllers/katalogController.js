@@ -2,14 +2,14 @@ const db = require("../config/database")
 
 // create
 exports.createKatalog = (req, res) => {
-  const { nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image } = req.body;
+  const { id_kategori, nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image } = req.body;
 
   const sql = `
-    INSERT INTO katalog (nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO katalog (id_kategori, nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(sql, [nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image], (err) => {
+  db.query(sql, [id_kategori, nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image], (err) => {
     if (err) {
       return res.status(500).json({
         message: "Gagal menambah katalog",
@@ -25,13 +25,23 @@ exports.createKatalog = (req, res) => {
 
 // read all
 exports.getAllKatalog = (req, res) => {
-  const sql = "SELECT * FROM katalog";
+  const sql = `
+  SELECT
+  katalog.*,
+  kategori.merk
+  FROM katalog
+  JOIN kategori
+  ON katalog.id_kategori = kategori.id
+  `;
 
   db.query(sql, (err, results) => {
     if (err) {
       return res.status(500).json(err);
     }
-    res.json(results);
+    res.json({
+      message: "success",
+      data: results
+    });
   });
 };
 
@@ -39,12 +49,23 @@ exports.getAllKatalog = (req, res) => {
 exports.searchKatalog = (req, res) => {
   const { nama } = req.query;
 
-  const sql = "SELECT * FROM katalog WHERE nama LIKE ?";
+  const sql = `
+  SELECT
+  katalog.*,
+  kategori.merk
+  FROM katalog
+  JOIN kategori
+  ON katalog.id_kategori = kategori.id
+  WHERE nama LIKE ?
+  `;
   db.query(sql, [`%${nama}%`], (err, results) => {
     if (err) {
       return res.status(500).json(err);
     }
-    res.json(results);
+    res.json({
+      message: "success",
+      data: results
+    });
   });
 };
 
@@ -52,7 +73,14 @@ exports.searchKatalog = (req, res) => {
 exports.getKatalogById = (req, res) => {
   const { id } = req.params;
 
-  const sql = "SELECT * FROM katalog WHERE id = ?";
+  const sql = `
+  SELECT
+  katalog.*,
+  kategori.merk
+  FROM katalog
+  JOIN kategori
+  ON katalog.id_kategori = kategori.id
+  WHERE id = ?`;
   db.query(sql, [id], (err, results) => {
     if (err) return res.status(500).json(err);
 
@@ -62,22 +90,25 @@ exports.getKatalogById = (req, res) => {
       });
     }
 
-    res.json(results[0]);
+    res.json({
+      message: "success",
+      data: results[0]
+    });
   });
 };
 
 // update
 exports.updateKatalog = (req, res) => {
   const { id } = req.params;
-  const { nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image, } = req.body;
+  const { id_kategori, nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image, } = req.body;
 
   const sql = `
     UPDATE katalog
-    SET nama = ?, harga = ?, tahun_produksi = ?, transmisi = ?, capacity = ?, maxspeed = ?, image = ?
+    SET id_kategori = ?, nama = ?, harga = ?, tahun_produksi = ?, transmisi = ?, capacity = ?, maxspeed = ?, image = ?
     WHERE id = ?
   `;
 
-  db.query(sql, [nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image, id], (err) => {
+  db.query(sql, [id_kategori, nama, harga, tahun_produksi, transmisi, capacity, maxspeed, image, id], (err) => {
     if (err) return res.status(500).json(err);
 
     res.json({ message: "Data katalog berhasil diupdate" });
