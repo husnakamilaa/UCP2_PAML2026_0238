@@ -1,6 +1,6 @@
 const db = require("../config/database")
 
-exports.getKatalogCustomer = (req, res) => {
+exports.getAllKatalogCustomer = (req, res) => {
 
   const sql = `
     SELECT
@@ -26,7 +26,7 @@ exports.searchKatalogCustomer = (req, res) => {
 
   const sql = `
   SELECT
-  katalog.*
+  katalog.*,
   kategori.merk
   FROM katalog
   JOIN kategori
@@ -47,7 +47,7 @@ exports.getKatalogCustomerById = (req, res) => {
 
   const sql = `
   SELECT
-  katalog.*
+  katalog.*,
   kategori.merk
   FROM katalog
   JOIN kategori
