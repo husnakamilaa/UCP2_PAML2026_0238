@@ -26,6 +26,27 @@ class _AddKategoriPageState extends State<AddKategoriPage> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
+      final inputMerk = _merkController.text.trim();
+      final kategoriState = context.read<KategoriBloc>().state;
+      if (kategoriState is KategoriLoaded) {
+
+      final isDuplicate = kategoriState.kategoriList.any(
+        (kategori) =>
+            kategori.merk.trim().toLowerCase() ==
+            inputMerk.toLowerCase(),
+      );
+
+      if (isDuplicate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Merk sudah ada"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
       final data = {'merk': _merkController.text};
 
       context.read<KategoriBloc>().add(CreateKategori(data));
