@@ -5,7 +5,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const katalogRoutes = require("./routes/katalogRoutes");
-const customerRoutes = require("./routes/customerRoutes");
+// const customerRoutes = require("./routes/customerRoutes");
 const kategoriRoutes = require("./routes/kategoriRoutes");
 
 const app = express();
@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/katalog", katalogRoutes);
-app.use("/api/katalog/customer", customerRoutes);
+// app.use("/api/katalog/customer", customerRoutes);
 app.use("/api/kategori", kategoriRoutes);
 
 const PORT = process.env.PORT || 3001;
