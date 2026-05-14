@@ -4,11 +4,17 @@ import 'package:driveease/ui/components/colours.dart';
 import 'package:driveease/logic/bloc/admin/katalog/katalog_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class DetailKatalogCust extends StatelessWidget {
-  const DetailKatalogCust({super.key, required this.katalog});
+  DetailKatalogCust({super.key, required this.katalog});
 
   final dynamic katalog;
+   final rupiahFormat = NumberFormat.currency(
+  locale: 'id_ID',
+  symbol: 'Rp ',
+  decimalDigits: 0,
+);
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +52,7 @@ class DetailKatalogCust extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "Rp ${katalog.harga}",
+                     rupiahFormat.format(katalog.harga),
                     style: const TextStyle(
                       fontSize: 18,
                       color: AppColors.grey,
@@ -60,12 +66,12 @@ class DetailKatalogCust extends StatelessWidget {
                     crossAxisCount: 2,
                     childAspectRatio: 3,
                     children: [
-                      _buildItem(Icons.speed, "${katalog.maxspeed} km/h"),
+                      _buildItem(Icons.speed, "${katalog.maxspeed}"),
                       _buildItem(
                         Icons.calendar_today,
                         "Tahun ${katalog.tahun_produksi}",
                       ),
-                      _buildItem(Icons.people, "${katalog.capacity} Kursi"),
+                      _buildItem(Icons.people, "${katalog.capacity}"),
                       _buildItem(Icons.settings, katalog.transmisi),
                     ],
                   ),

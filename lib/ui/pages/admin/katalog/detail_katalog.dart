@@ -5,11 +5,17 @@ import 'package:driveease/logic/bloc/admin/katalog/katalog_bloc.dart';
 import 'package:driveease/ui/pages/admin/katalog/edit_katalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class DetailKatalogPage extends StatelessWidget {
-  const DetailKatalogPage({super.key, required this.katalog});
+  DetailKatalogPage({super.key, required this.katalog});
 
   final dynamic katalog;
+  final rupiahFormat = NumberFormat.currency(
+  locale: 'id_ID',
+  symbol: 'Rp ',
+  decimalDigits: 0,
+);
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +53,7 @@ class DetailKatalogPage extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "Rp ${katalog.harga}",
+                    rupiahFormat.format(katalog.harga),
                     style: const TextStyle(
                       fontSize: 18,
                       color: AppColors.grey,
