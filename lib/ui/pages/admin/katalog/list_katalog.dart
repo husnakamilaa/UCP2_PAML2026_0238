@@ -29,11 +29,11 @@ class _ListKatalogPageState extends State<ListKatalogPage> {
   final _searchController = TextEditingController();
   Timer? _searchDebounce;
   String? _selectedKategori;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     context.read<KategoriBloc>().add(FetchKategori());
   }
 
@@ -125,7 +125,6 @@ class _ListKatalogPageState extends State<ListKatalogPage> {
                     },
                   ),
                   BlocBuilder<KategoriBloc, KategoriState>(
-                    
                     builder: (context, state) {
                       if (state is KategoriLoaded) {
                         final kategori = state.kategoriList;
@@ -177,9 +176,13 @@ class _ListKatalogPageState extends State<ListKatalogPage> {
                           );
                         }
                         if (state is KatalogLoaded) {
-                          final filtered = state.katalogList.where((k){
-                            final matchesSearch = k.nama.toLowerCase().contains(_searchController.text.toLowerCase());
-                            final matchesCategory = _selectedKategori == null || k.merk == _selectedKategori;
+                          final filtered = state.katalogList.where((k) {
+                            final matchesSearch = k.nama.toLowerCase().contains(
+                              _searchController.text.toLowerCase(),
+                            );
+                            final matchesCategory =
+                                _selectedKategori == null ||
+                                k.merk == _selectedKategori;
                             return matchesSearch && matchesCategory;
                           }).toList();
                           return ListView.builder(
@@ -220,6 +223,7 @@ class _ListKatalogPageState extends State<ListKatalogPage> {
   }
 
   Widget _buildKatalogCard(BuildContext context, dynamic katalog) {
+    final bool isKategoriDeleted = katalog.id_kategori == null;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: InkWell(
@@ -238,14 +242,22 @@ class _ListKatalogPageState extends State<ListKatalogPage> {
         child: Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.white,
+            color: isKategoriDeleted
+                ? Colors
+                      .grey
+                      .shade300 // ni buat truenya, alias kalau null
+                : AppColors.white, // ni kalaubuat false alias ada merknya
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.navygrey),
+            border: Border.all(
+              color: isKategoriDeleted ? Colors.grey : AppColors.navygrey,
+            ),
           ),
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.navy,
+                backgroundColor: isKategoriDeleted
+                    ? Colors.grey
+                    : AppColors.navy,
                 child: const Icon(Icons.category, color: Colors.white),
               ),
               const SizedBox(width: 12),
@@ -255,8 +267,10 @@ class _ListKatalogPageState extends State<ListKatalogPage> {
                   children: [
                     Text(
                       katalog.nama,
-                      style: const TextStyle(
-                        color: AppColors.navy,
+                      style: TextStyle(
+                        color: isKategoriDeleted
+                            ? Colors.grey.shade700
+                            : AppColors.navy,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -265,6 +279,13 @@ class _ListKatalogPageState extends State<ListKatalogPage> {
                       style: const TextStyle(
                         color: AppColors.grey,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      katalog.merk ?? "Kategori sudah dihapus",
+                      style: TextStyle(
+                        color: isKategoriDeleted ? Colors.red : AppColors.grey,
+                        fontSize: 12,
                       ),
                     ),
                   ],
