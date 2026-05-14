@@ -6,7 +6,7 @@ exports.createKategori = (req, res) => {
 
   const sql = `
     INSERT INTO kategori (merk)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?)
   `;
 
   db.query(sql, [merk], (err) => {
@@ -31,7 +31,10 @@ exports.getAllKategori = (req, res) => {
     if (err) {
       return res.status(500).json(err);
     }
-    res.json(results);
+    res.json({
+      message: "success",
+      data: results
+    });
   });
 };
 
